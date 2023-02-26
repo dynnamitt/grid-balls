@@ -19,12 +19,16 @@ struct GreetTimer(Timer);
 struct Person;
 
 #[derive(Component)]
+struct InHuman;
+
+#[derive(Component)]
 struct Name(String);
 
 fn add_people(mut commands: Commands) {
     commands.spawn((Person, Name("Elaina Proctor".to_string())));
     commands.spawn((Person, Name("Renzo Hume".to_string())));
     commands.spawn((Person, Name("Zayna Nieves".to_string())));
+    commands.spawn((Person, InHuman));
 }
 
 fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Person>>) {
