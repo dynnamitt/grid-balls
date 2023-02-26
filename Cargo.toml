@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 # bevy = "0.9.1" release!! 
-bevy = { version = "0.9.0", features = ["dynamic"] }
+bevy = { version = "0.9.0", features = ["dynamic"] } # for fast build developing!
 
