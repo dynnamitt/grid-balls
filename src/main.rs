@@ -52,6 +52,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
         .add_plugin(HelloPlugin) // single
-        // .add_plugin(WorldInspectorPlugin) // single
+        .add_plugin(WorldInspectorPlugin) // single
         .run();
 }
