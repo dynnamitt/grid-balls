@@ -7,6 +7,10 @@ edition = "2021"
 
 [dependencies]
 # bevy = "0.9.1" release!! 
-bevy = { version = "0.9.0", features = ["dynamic"] } # for fast build developing!
+bevy = { version = "0.9.0", features = ["dynamic","wayland"] } # for fast build developing!
 bevy-inspector-egui = "0.17.0"
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
 
