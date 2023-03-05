@@ -1,43 +1,84 @@
 use bevy::prelude::*;
+use bevy_ecs_tilemap::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-pub struct HelloPlugin;
+pub struct TilePlug;
 
-impl Plugin for HelloPlugin {
+impl Plugin for TilePlug {
     fn build(&self, app: &mut App) {
-        let timer = Timer::from_seconds(1.0, TimerMode::Repeating);
-        app.add_startup_system(add_people)
-            .insert_resource(GreetTimer(timer))
-            .add_system(greet_people);
+        app.add_plugin(TilemapPlugin)
+            .add_startup_system(tilemap_startup);
+        // .add_system(helpers::camera::movement)
+        // .add_system(swap_texture_or_hide);
     }
 }
 
-#[derive(Resource)]
-struct GreetTimer(Timer);
+fn tilemap_startup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    #[cfg(all(not(feature = "atlas"), feature = "render"))] array_texture_loader: Res<
+        ArrayTextureLoader,
+    >,
+) {
+    commands.spawn(Camera2dBundle::default());
 
-#[derive(Component)]
-struct Person;
+    let texture_handle: Handle<Image> = asset_server.load("tiles.png");
 
-#[derive(Component)]
-struct InHuman;
+    let map_size = TilemapSize { x: 32, y: 32 };
 
-#[derive(Component)]
-struct Name(String);
+    // Create a tilemap entity a little early.
+    // We want this entity early because we need to tell each tile which tilemap entity
+    // it is associated with. This is done with the TilemapId component on each tile.
+    // Eventually, we will insert the `TilemapBundle` bundle on the entity, which
+    // will contain various necessary components, such as `TileStorage`.
+    let tilemap_entity = commands.spawn_empty().id();
 
-fn add_people(mut commands: Commands) {
-    commands.spawn((Person, Name("Elaina Proctor".to_string())));
-    commands.spawn((Person, Name("Renzo Hume".to_string())));
-    commands.spawn((Person, Name("Zayna Nieves".to_string())));
-    commands.spawn((Person, InHuman));
-}
+    // To begin creating the map we will need a `TileStorage` component.
+    // This component is a grid of tile entities and is used to help keep track of individual
+    // tiles in the world. If you have multiple layers of tiles you would have a tilemap entity
+    // per layer, each with their own `TileStorage` component.
+    let mut tile_storage = TileStorage::empty(map_size);
 
-fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Person>>) {
-    // update our timer with the time elapsed since the last update
-    // if that caused the timer to finish, we say hello to everyone
-    if timer.0.tick(time.delta()).just_finished() {
-        for name in query.iter() {
-            println!("hello {}!", name.0);
+    // Spawn the elements of the tilemap.
+    // Alternatively, you can use helpers::filling::fill_tilemap.
+    for x in 0..map_size.x {
+        for y in 0..map_size.y {
+            let tile_pos = TilePos { x, y };
+            let tile_entity = commands
+                .spawn(TileBundle {
+                    position: tile_pos,
+                    tilemap_id: TilemapId(tilemap_entity),
+                    ..Default::default()
+                })
+                .id();
+            tile_storage.set(&tile_pos, tile_entity);
         }
+    }
+
+    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
+    let grid_size = tile_size.into();
+    let map_type = TilemapType::default();
+
+    commands.entity(tilemap_entity).insert(TilemapBundle {
+        grid_size,
+        map_type,
+        size: map_size,
+        storage: tile_storage,
+        texture: TilemapTexture::Single(texture_handle),
+        tile_size,
+        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
+        ..Default::default()
+    });
+
+    // Add atlas to array texture loader so it's preprocessed before we need to use it.
+    // Only used when the atlas feature is off and we are using array textures.
+    #[cfg(all(not(feature = "atlas"), feature = "render"))]
+    {
+        array_texture_loader.add(TilemapArrayTexture {
+            texture: TilemapTexture::Single(asset_server.load("tiles.png")),
+            tile_size,
+            ..Default::default()
+        });
     }
 }
 /*
@@ -51,7 +92,7 @@ fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Na
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
-        .add_plugin(HelloPlugin) // single
+        .add_plugin(TilePlug)
         .add_plugin(WorldInspectorPlugin) // single
         .run();
 }
