@@ -7,15 +7,25 @@ impl Plugin for HelloPlugin {
     fn build(&self, app: &mut App) {
         let timer = Timer::from_seconds(1.0, TimerMode::Repeating);
 
-        app.add_startup_system(card_deck)
+        app.add_startup_system(setup_card_deck)
+            .add_startup_system(load_large_cards)
             .insert_resource(GreetTimer(timer))
-            .add_system(all_cards);
+            .add_system(all_cards_txt_dump);
         // .add_system(greet_people);
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Reflect, Default)]
 struct GreetTimer(Timer);
+
+#[derive(Resource, Default)]
+struct CardAssets(Vec<HandleUntyped>);
+
+fn load_large_cards(mut commands: Commands, server: Res<AssetServer>) {
+    if let Ok(handles) = server.load_folder("large_cards") {
+        commands.insert_resource(CardAssets(handles));
+    }
+}
 
 // --------------------------------- comps
 //
@@ -58,16 +68,9 @@ struct Suit(usize);
 #[derive(Component)]
 struct Rank(usize);
 
-#[derive(Component)]
-struct Person;
+fn setup_card_deck(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
 
-#[derive(Component)]
-struct InHuman;
-
-#[derive(Component)]
-struct Name(String);
-
-fn card_deck(mut commands: Commands) {
     for s in 0..french_deck::SUIT_MAX {
         for r in 0..french_deck::RANK_MAX {
             let s_comp = Suit(s);
@@ -77,7 +80,7 @@ fn card_deck(mut commands: Commands) {
     }
 }
 
-fn all_cards(time: Res<Time>, mut timer: ResMut<GreetTimer>, q: Query<(&Suit, &Rank)>) {
+fn all_cards_txt_dump(time: Res<Time>, mut timer: ResMut<GreetTimer>, q: Query<(&Suit, &Rank)>) {
     if timer.0.tick(time.delta()).just_finished() {
         let mut prev_s: usize = 0;
         for (suit, rank) in q.iter() {
@@ -103,6 +106,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
         .add_plugin(HelloPlugin) // single
-        .add_plugin(WorldInspectorPlugin) // single
+        .add_plugin(WorldInspectorPlugin::new()) // single
         .run();
 }
