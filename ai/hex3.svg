@@ -1,0 +1,12 @@
+<svg width="200" height="200">
+  <polygon points="100,20 180,70 180,140 100,190 20,140 20,70"
+           style="fill:url(#grad); stroke:none;" />
+  <defs>
+    <radialGradient id="grad">
+      <stop offset="0%" stop-color="#f44336" />
+      <stop offset="25%" stop-color="#4caf50" />
+      <stop offset="50%" stop-color="#ffc107" />
+      <stop offset="75%" stop-color="#00bcd4" />
+    </radialGradient>
+  </defs>
+</svg>

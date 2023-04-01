@@ -1,0 +1,14 @@
+<svg width="200" height="200">
+  <defs>
+    <polygon id="hexagon" points="100,20 180,70 180,140 100,190 20,140 20,70" />
+  </defs>
+  <clipPath id="clip">
+    <circle cx="100" cy="100" r="100" />
+  </clipPath>
+  <rect width="100%" height="100%" clip-path="url(#clip)" style="fill:#00bcd4;" />
+  <use xlink:href="#hexagon" style="fill:#f44336; transform: rotate(60deg) translate(60px, 60px);" />
+  <use xlink:href="#hexagon" style="fill:#4caf50; transform: rotate(120deg) translate(60px, 60px);" />
+  <use xlink:href="#hexagon" style="fill:#ffc107; transform: rotate(180deg) translate(60px, 60px);" />
+  <use xlink:href="#hexagon" style="fill:#9c27b0; transform: rotate(240deg) translate(60px, 60px);" />
+</svg>
+

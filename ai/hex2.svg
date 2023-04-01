@@ -1,0 +1,10 @@
+<svg width="200" height="200">
+  <polygon points="100,20 180,70 180,140 100,190 20,140 20,70"
+           style="fill:#00bcd4; stroke:none;" />
+  <polygon points="100,20 100,80 60,105"
+           style="fill:#f44336; stroke:none;" />
+  <polygon points="60,105 100,80 100,190 60,165"
+           style="fill:#4caf50; stroke:none;" />
+  <polygon points="100,190 140,165 140,105"
+           style="fill:#ffc107; stroke:none;" />
+</svg>
