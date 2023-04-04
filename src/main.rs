@@ -1,96 +1,62 @@
-use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy::{prelude::*, window::PrimaryWindow};
+// use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-pub struct HelloPlugin;
+mod french_deck;
 
-impl Plugin for HelloPlugin {
+pub struct CardGamePlugin;
+
+impl Plugin for CardGamePlugin {
     fn build(&self, app: &mut App) {
-        let timer = Timer::from_seconds(1.0, TimerMode::Repeating);
-
         app.add_startup_system(setup_card_deck)
-            .add_startup_system(load_large_cards)
-            .insert_resource(GreetTimer(timer))
-            .add_system(all_cards_txt_dump);
-        // .add_system(greet_people);
-    }
-}
-
-#[derive(Resource, Reflect, Default)]
-struct GreetTimer(Timer);
-
-#[derive(Resource, Default)]
-struct CardAssets(Vec<HandleUntyped>);
-
-fn load_large_cards(mut commands: Commands, server: Res<AssetServer>) {
-    if let Ok(handles) = server.load_folder("large_cards") {
-        commands.insert_resource(CardAssets(handles));
+            .add_startup_system(spawn_camera.before(setup_card_deck));
     }
 }
 
 // --------------------------------- comps
 //
-mod french_deck {
-    use std::fmt;
 
-    pub const RANK_MAX: usize = 13;
-    pub const SUIT_MAX: usize = 4;
+fn spawn_camera(mut commands: Commands, win_query: Query<&Window, With<PrimaryWindow>>) {
+    let win: &Window = win_query.get_single().unwrap();
 
-    fn rank_str(r: usize) -> String {
-        if r > 8 {
-            ["J", "Q", "K", "A"][r - 9].to_string()
-        } else {
-            (r + 2).to_string()
-        }
-    }
-
-    fn suit_str(s: usize) -> String {
-        match s {
-            0 => "H".to_string(),
-            1 => "S".to_string(),
-            2 => "C".to_string(),
-            3 => "D".to_string(),
-            _ => " ".to_string(),
-        }
-    }
-
-    pub struct Card(pub usize, pub usize);
-
-    impl fmt::Display for Card {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{}{}", suit_str(self.0), rank_str(self.1))
-        }
-    }
+    let xc = win.width() / 2.0;
+    let yc = win.height() / 2.0;
+    commands.spawn(Camera2dBundle {
+        transform: Transform::from_xyz(xc, yc, 0.0),
+        ..default()
+    });
 }
 
-#[derive(Component)]
-struct Suit(usize);
+fn setup_card_deck(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    win_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let win: &Window = win_query.get_single().unwrap();
 
-#[derive(Component)]
-struct Rank(usize);
+    let x_c = win.width() / 2.0;
+    let y_c = win.height() / 2.0;
 
-fn setup_card_deck(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    let dir_prefix = "large_cards";
 
-    for s in 0..french_deck::SUIT_MAX {
-        for r in 0..french_deck::RANK_MAX {
-            let s_comp = Suit(s);
-            let r_comp = Rank(r);
-            commands.spawn((s_comp, r_comp));
-        }
-    }
-}
+    // You can load all assets in a folder like this.
+    // They will be loaded in parallel without blocking
+    let _card_assets: Vec<HandleUntyped> = asset_server.load_folder(dir_prefix).unwrap();
 
-fn all_cards_txt_dump(time: Res<Time>, mut timer: ResMut<GreetTimer>, q: Query<(&Suit, &Rank)>) {
-    if timer.0.tick(time.delta()).just_finished() {
-        let mut prev_s: usize = 0;
-        for (suit, rank) in q.iter() {
-            if suit.0 != prev_s {
-                println!("");
-            }
-            prev_s = suit.0;
-            print!("{} ", french_deck::Card(suit.0, rank.0));
-        }
-        println!(".")
+    // Then any asset in the folder can be accessed like this:
+    // let monkey_handle = asset_server.get_handle("models/monkey/Monkey.gltf#Mesh0/Primitive0");
+
+    for c in french_deck::CardDeck::new().0 {
+        let img_path = format!("{}/{}", dir_prefix, c.file_name());
+        println!("{}", img_path);
+        let card_hnd: Handle<Image> = asset_server.get_handle(&img_path);
+        commands.spawn((
+            c,
+            SpriteBundle {
+                texture: card_hnd,
+                transform: Transform::from_xyz(x_c, y_c, 0.0),
+                ..default()
+            },
+        ));
     }
 }
 
@@ -105,7 +71,7 @@ fn all_cards_txt_dump(time: Res<Time>, mut timer: ResMut<GreetTimer>, q: Query<(
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
-        .add_plugin(HelloPlugin) // single
-        .add_plugin(WorldInspectorPlugin::new()) // single
+        .add_plugin(CardGamePlugin) // single
+        // .add_plugin(WorldInspectorPlugin::new()) // single
         .run();
 }
