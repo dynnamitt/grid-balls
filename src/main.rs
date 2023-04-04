@@ -26,6 +26,23 @@ fn spawn_camera(mut commands: Commands, win_query: Query<&Window, With<PrimaryWi
     });
 }
 
+const CARD_SPEED: f32 = 250.0;
+const CARD_WIDTH: f32 = 64.0;
+
+// fn animate_cards(
+//     card_query: Query<(&mut Transform, &french_deck::Card)>,
+//     time: Res<Time>,
+//     win_query: Query<&Window, With<PrimaryWindow>>,
+// ) {
+//     let win: &Window = win_query.get_single().unwrap();
+// }
+
+#[derive(Component)]
+struct StartStackPos(usize);
+
+#[derive(Component)]
+struct Stack(usize);
+
 fn setup_card_deck(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -33,8 +50,10 @@ fn setup_card_deck(
 ) {
     let win: &Window = win_query.get_single().unwrap();
 
-    let x_c = win.width() / 2.0;
-    let y_c = win.height() / 2.0;
+    let startdeck_x = win.width() / 2.0; //- CARD_WIDTH / 2.0;
+    let startdeck_y = win.height() / 12.0 * 11.0; // - CARD_WIDTH / 2.0;
+
+    // println!("startdeck = {},{}", startdeck_x, startdeck_y);
 
     let dir_prefix = "large_cards";
 
@@ -45,15 +64,19 @@ fn setup_card_deck(
     // Then any asset in the folder can be accessed like this:
     // let monkey_handle = asset_server.get_handle("models/monkey/Monkey.gltf#Mesh0/Primitive0");
 
-    for c in french_deck::CardDeck::new().0 {
-        let img_path = format!("{}/{}", dir_prefix, c.file_name());
-        println!("{}", img_path);
+    for card in french_deck::CardDeck::single().0 {
+        let img_path = format!("{}/{}", dir_prefix, card.file_name());
+        println!("{}", card);
         let card_hnd: Handle<Image> = asset_server.get_handle(&img_path);
+        let deck_position = card.deck_pos as f32;
+        let x = startdeck_x + (deck_position / 3.0);
+        let y = startdeck_y + (deck_position / 3.0);
+        let z = -deck_position;
         commands.spawn((
-            c,
+            card,
             SpriteBundle {
                 texture: card_hnd,
-                transform: Transform::from_xyz(x_c, y_c, 0.0),
+                transform: Transform::from_xyz(x, y, z),
                 ..default()
             },
         ));

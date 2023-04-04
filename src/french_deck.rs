@@ -9,37 +9,49 @@ pub const RANKS: [&str; 13] = [
 pub struct CardDeck<'a>(pub Vec<Card<'a>>);
 
 impl CardDeck<'_> {
-    pub fn new() -> Self {
+    pub fn single() -> Self {
         let items = SUITS
             .iter()
-            .flat_map(|suit| RANKS.iter().map(|rank| Card(suit, rank)))
+            .flat_map(|suit| RANKS.iter().map(move |rank| (suit, rank)))
+            .enumerate()
+            .map(|(i, tup)| Card {
+                suit: tup.0,
+                rank: tup.1,
+                deck_pos: i,
+            })
             .collect();
         Self(items)
     }
+
+    pub fn double() -> Self {
+        unimplemented!();
+    }
 }
 
-// who is gonna win?
-#[derive(Component)]
-pub struct Card<'a>(&'a str, &'a str);
+#[derive(Component, Clone, Copy)]
+pub struct Card<'a> {
+    pub suit: &'a str,
+    pub rank: &'a str,
+    pub deck_pos: usize,
+}
 
 impl Card<'_> {
     pub fn file_name(&self) -> String {
         let prefix = "card";
         let suffix = "png";
-        let s = self.0;
-        let suit_full = match s {
+        let suit_full = match self.suit {
             "H" => "hearts".to_string(),
             "S" => "spades".to_string(),
             "C" => "clubs".to_string(),
             "D" => "diamonds".to_string(),
             _ => " ".to_string(),
         };
-        format!("{}_{}_{}.{}", prefix, suit_full, self.1, suffix)
+        format!("{}_{}_{}.{}", prefix, suit_full, self.rank, suffix)
     }
 }
 
 impl fmt::Display for Card<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}_{}", self.0, self.1)
+        write!(f, "{}:{}_{}", self.deck_pos, self.suit, self.rank)
     }
 }
