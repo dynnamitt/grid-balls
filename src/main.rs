@@ -1,6 +1,7 @@
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::{prelude::*, window::PrimaryWindow};
-// use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_prototype_debug_lines::*;
 
 mod french_deck;
 
@@ -29,8 +30,8 @@ fn spawn_camera(mut commands: Commands, win_query: Query<&Window, With<PrimaryWi
     });
 }
 
-const CARD_SPEED: f32 = 250.0;
-const CARD_WIDTH: f32 = 64.0;
+// const CARD_SPEED: f32 = 250.0;
+// const CARD_WIDTH: f32 = 64.0;
 
 // fn animate_cards(
 //     time: Res<Time>,
@@ -66,7 +67,7 @@ fn setup_card_deck(
     let _card_assets: Vec<HandleUntyped> = asset_server.load_folder(dir_prefix).unwrap();
 
     // Then any asset in the folder can be accessed like this:
-    // let monkey_handle = asset_server.get_handle("models/monkey/Monkey.gltf#Mesh0/Primitive0");
+    // let monkey_handle = asset_server.get_handle("models/monkey/Monkey.png");
 
     for card in french_deck::CardDeck::single().0 {
         let img_path = format!("{}/{}", dir_prefix, card.file_name());
@@ -77,6 +78,7 @@ fn setup_card_deck(
         let y = startdeck_y + (deck_position / 3.0);
         let z = deck_position;
         commands.spawn((
+            Name::new(card.to_string()),
             card,
             SpriteBundle {
                 texture: card_hnd,
@@ -98,9 +100,27 @@ fn setup_card_deck(
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
-        .add_plugin(CardGamePlugin) // single
+        .add_plugin(CardGamePlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        // .add_plugin(WorldInspectorPlugin::new()) // single
+        .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(DebugLinesPlugin::default())
+        .add_system(show_grid)
         .run();
+}
+
+fn show_grid(win_query: Query<&Window, With<PrimaryWindow>>, mut lines: ResMut<DebugLines>) {
+    let win: &Window = win_query.get_single().unwrap();
+
+    for x in (0..win.width() as usize).step_by(64) {
+        let start = Vec3::new(x as f32, 0., 0.);
+        let end = Vec3::new(x as f32, win.height(), 0.);
+        lines.line_colored(start, end, 0., Color::GREEN);
+    }
+    for y in (0..win.height() as usize).step_by(64) {
+        let start = Vec3::new(0., y as f32, 0.);
+        let end = Vec3::new(win.width(), y as f32, 0.);
+        lines.line_colored(start, end, 0., Color::GREEN);
+    }
+    // TODO: strange padding when smaller windo
 }
