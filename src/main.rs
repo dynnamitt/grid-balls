@@ -1,3 +1,4 @@
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::{prelude::*, window::PrimaryWindow};
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -9,6 +10,7 @@ impl Plugin for CardGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_card_deck)
             .add_startup_system(spawn_camera.before(setup_card_deck));
+        // .add_system(animate_cards);
     }
 }
 
@@ -21,7 +23,7 @@ fn spawn_camera(mut commands: Commands, win_query: Query<&Window, With<PrimaryWi
     let xc = win.width() / 2.0;
     let yc = win.height() / 2.0;
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(xc, yc, 0.0),
+        transform: Transform::from_xyz(xc, yc, 200.0),
         ..default()
     });
 }
@@ -30,11 +32,12 @@ const CARD_SPEED: f32 = 250.0;
 const CARD_WIDTH: f32 = 64.0;
 
 // fn animate_cards(
-//     card_query: Query<(&mut Transform, &french_deck::Card)>,
 //     time: Res<Time>,
+//     // card_query: Query<(&mut Transform, &french_deck::Card)>,
 //     win_query: Query<&Window, With<PrimaryWindow>>,
 // ) {
 //     let win: &Window = win_query.get_single().unwrap();
+//     unimplemented!();
 // }
 
 #[derive(Component)]
@@ -71,7 +74,7 @@ fn setup_card_deck(
         let deck_position = card.deck_pos as f32;
         let x = startdeck_x + (deck_position / 3.0);
         let y = startdeck_y + (deck_position / 3.0);
-        let z = -deck_position;
+        let z = deck_position;
         commands.spawn((
             card,
             SpriteBundle {
@@ -95,6 +98,8 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins) // PluginGroup
         .add_plugin(CardGamePlugin) // single
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // .add_plugin(WorldInspectorPlugin::new()) // single
         .run();
 }

@@ -6,9 +6,9 @@ pub const RANKS: [&str; 13] = [
     "02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "K", "A",
 ];
 
-pub struct CardDeck<'a>(pub Vec<Card<'a>>);
+pub struct CardDeck(pub Vec<Card>);
 
-impl CardDeck<'_> {
+impl CardDeck {
     pub fn single() -> Self {
         let items = SUITS
             .iter()
@@ -28,29 +28,29 @@ impl CardDeck<'_> {
     }
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct Card<'a> {
-    pub suit: &'a str,
-    pub rank: &'a str,
+#[derive(Component, Clone)]
+pub struct Card {
+    pub suit: &'static str,
+    pub rank: &'static str,
     pub deck_pos: usize,
 }
 
-impl Card<'_> {
+impl Card {
     pub fn file_name(&self) -> String {
         let prefix = "card";
         let suffix = "png";
         let suit_full = match self.suit {
-            "H" => "hearts".to_string(),
-            "S" => "spades".to_string(),
-            "C" => "clubs".to_string(),
-            "D" => "diamonds".to_string(),
-            _ => " ".to_string(),
+            "H" => "hearts",
+            "S" => "spades",
+            "C" => "clubs",
+            "D" => "diamonds",
+            _ => " ",
         };
         format!("{}_{}_{}.{}", prefix, suit_full, self.rank, suffix)
     }
 }
 
-impl fmt::Display for Card<'_> {
+impl fmt::Display for Card {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}_{}", self.deck_pos, self.suit, self.rank)
     }
