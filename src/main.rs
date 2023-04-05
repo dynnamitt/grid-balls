@@ -8,7 +8,8 @@ pub struct CardGamePlugin;
 
 impl Plugin for CardGamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_card_deck)
+        app.insert_resource(ClearColor(Color::hex("cecece").unwrap()))
+            .add_startup_system(setup_card_deck)
             .add_startup_system(spawn_camera.before(setup_card_deck));
         // .add_system(animate_cards);
     }
