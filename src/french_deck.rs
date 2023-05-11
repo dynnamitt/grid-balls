@@ -5,6 +5,7 @@ pub const SUITS: [&str; 4] = ["H", "C", "D", "S"];
 pub const RANKS: [&str; 13] = [
     "02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "K", "A",
 ];
+pub const DECK_MAX: usize = 4 * 13;
 
 pub struct CardDeck(pub Vec<Card>);
 
@@ -24,7 +25,18 @@ impl CardDeck {
     }
 
     pub fn double() -> Self {
-        unimplemented!();
+        let mut a = Self::single();
+        let b = Self::single();
+        // iterate b and increase .deck_pos
+        let mut b_itms: Vec<Card> =
+            b.0.into_iter()
+                .map(|mut c| {
+                    c.deck_pos = c.deck_pos + DECK_MAX;
+                    c
+                })
+                .collect();
+        a.0.append(&mut b_itms);
+        Self(a.0)
     }
 }
 

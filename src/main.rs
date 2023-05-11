@@ -69,7 +69,7 @@ fn setup_card_deck(
     // Then any asset in the folder can be accessed like this:
     // let monkey_handle = asset_server.get_handle("models/monkey/Monkey.png");
 
-    for card in french_deck::CardDeck::single().0 {
+    for card in french_deck::CardDeck::double().0 {
         let img_path = format!("{}/{}", dir_prefix, card.file_name());
         println!("{}", card);
         let card_hnd: Handle<Image> = asset_server.get_handle(&img_path);
